@@ -3,7 +3,7 @@
  * e a model, que teremos todas as tratativas e regra de negócio*
  *              para o CRUD de filmes                           *
  * Data: 31/01/2024                                             *
- * Autor: Ana Luiza                                             *
+ * Autor: Luana Santos                                           *
  * Versão: 1.0                                                  *
  ****************************************************************/
 const message = require('../modulo/config')
@@ -11,6 +11,7 @@ const message = require('../modulo/config')
 const filmesDAO = require('../model/DAO/filme')
 const classificacaoDAO = require('../model/DAO/classificacao.js')
 const generoDAO = require('../model/DAO/genero.js')
+const { filmes } = require('../modulo/filmes')
 
 
 //Função para inserir um novo filme no banco de dados
@@ -175,23 +176,27 @@ const setAtualizarFilme = async function (id, contentType, dadosFilme) {
 const setExcluirFilme = async function (id) {
     try {
         let idFilme = id
+        console.log(idFilme);
 
         if (idFilme == '' || idFilme == undefined || isNaN(idFilme)) {
             return message.ERROR_INVALID_ID
         } else {
 
             let validaId = await filmesDAO.selectByIdFilme(idFilme)
+         
 
             if (validaId == false) {
 
                 return message.ERROR_NOT_FOUND //404
 
-            } else {
+            } else{
                 let dadosFilme = await filmesDAO.deleteFilme(idFilme)
+                let apagarFilmeGenero = await filmesDAO.ApagarGeneroFilme(id)
+                if (dadosFilme||apagarFilmeGenero) {console.log("i0 cosa");
 
-                if (dadosFilme) {
                     return message.SUCESS_DELETED_ITEM
-                } else {
+                } else {console.log("yhhh cosa");
+
                     return message.ERROR_INTERNAL_SERVER_DB
                 }
 
@@ -200,7 +205,7 @@ const setExcluirFilme = async function (id) {
         }
 
     } catch (error) {
-
+console.log("alguma cosa");
         return message.ERROR_INTERNAL_SERVER
 
     }
@@ -264,20 +269,49 @@ const getBuscarFilme = async function (id) {
     } else {
         let dadosFilme = await filmesDAO.selectByIdFilme(idFilme)
 
-        if (dadosFilme) {
-            if (dadosFilme.length) {
-                filmeJson.filme = dadosFilme
-                filmeJson.status_code = 200
+        if(dadosFilme){
 
-                return filmeJson //200
+            let filmeClassificacao = await classificacaoDAO.classificacaoFilmes(id)
 
-            } else {
-                return message.ERROR_NOT_FOUND //404
+            if(filmeClassificacao){
+
+                if (dadosFilme.length) {
+
+                    filmeJson.filme = dadosFilme
+                    filmeJson.status_code = 200
+    
+                    return filmeJson //200
+    
+                } else {
+                    return message.ERROR_NOT_FOUND //404
+                }
             }
-
-        } else {
             return message.ERROR_INTERNAL_SERVER_DB //500
+
         }
+        console.log(dadosFilme)
+
+        
+        // for(let filmes of dadosFilme){
+        //     let dadosClassificacao = await classificacaoDAO.selectByIdClassificacao(filmes.classificacao_id)
+        //     delete filmes.classificacao_id
+        //     filmes.classificacao = dadosClassificacao
+        // }
+
+        // if (dadosFilme) {
+        //     if (dadosFilme.length) {
+        //         filmeJson.filme = dadosFilme
+        //         filmeJson.status_code = 200
+
+        //         return filmeJson //200
+
+        //     } else {
+        //         return message.ERROR_NOT_FOUND //404
+        //     }
+
+        // } else {
+        //     return message.ERROR_INTERNAL_SERVER_DB //500
+        // }
     }
 
 
@@ -311,11 +345,207 @@ const getNomeFilme = async function (filmeNome) {
     }
 }
 
+const getListarClassificacoes = async function (){
+    let classificacaoJSON = {}
+
+
+    //Chama a função do DAO que retorna os filmes do BD
+    let dadosClassificacao = await filmesDAO.selectAllClassificacao()
+
+
+    //Validação para verificar se o DAO retornou dados
+    if(dadosClassificacao){
+
+        //cria o JSON
+        classificacaoJSON.Classificacao = dadosClassificacao
+        classificacaoJSON.quantidade = dadosClassificacao.length
+        classificacaoJSON.status_code = 200
+
+        return classificacaoJSON
+    }else{
+        return false
+    }
+}
+
+const getBuscarClassificacaoID = async function (id){
+     
+    
+
+    let idClassificacao = id
+
+    //cria o objeto JSON
+    let classificacaoJSON = {}
+
+
+    //Validação para verificar se o id é válido (vazio, indefinido e não numerico)
+    if(id == '' || idClassificacao == undefined || isNaN(idClassificacao)){
+        return message.ERROR_INVALID_ID//400
+    }else{
+        
+        //Encaminha para o DAO localizar o ID do filme
+        let dadosClassificacao = await filmesDAO.selectClassificacaoByID(idClassificacao)
+        console.log(dadosClassificacao)
+
+        //Validação para verificar se existem dados de retorno
+        if(dadosClassificacao){
+
+            if(dadosClassificacao.length > 0){
+
+            //cria o JSON de retorno
+            classificacaoJSON.Classificacao = dadosClassificacao
+            classificacaoJSON.status_code = 200
+
+            return classificacaoJSON
+            }else{
+                return message.ERROR_NOT_FOUND
+            }
+        }else{
+        return message.ERROR_INTERNAL_SERVER_DB//500
+    }
+    }
+
+
+}
+
+const setInserirNovaClassificacao = async function (dadosClassificacao, contentType){
+
+    try {
+
+        if (String(contentType).toLowerCase() == 'application/json') {
+
+            let novaClassificacaoJSON = {}
+
+            if (dadosClassificacao.faixa_etaria == ''       || dadosClassificacao.faixa_etaria == undefined     || dadosClassificacao.faixa_etaria == null      || dadosClassificacao.faixa_etaria.length > 5       ||
+                dadosClassificacao.classificacao == ''      || dadosClassificacao.classificacao == undefined    || dadosClassificacao.classificacao == null     || dadosClassificacao.classificacao.length > 50     ||
+                dadosClassificacao.caracteristica == ''     || dadosClassificacao.caracteristica == undefined   || dadosClassificacao.caracteristica == null    || dadosClassificacao.caracteristica.length > 1000  ||
+                dadosClassificacao.icone == ''              || dadosClassificacao.icone == undefined            || dadosClassificacao.icone == null             || dadosClassificacao.icone.length > 200         
+                ) {
+                    
+                return message.ERROR_REQUIRE_FIELDS //400
+
+            } else {
+
+                let validateStatus = true
+
+
+                if (validateStatus) {
+
+                    let novaClassificacao = await filmesDAO.inserirClassificacao(dadosClassificacao)
+
+                    if (novaClassificacao) {
+
+                        novaClassificacaoJSON.classificacao = dadosClassificacao
+                        novaClassificacaoJSON.status = message.SUCCESS_CREATED_ITEM.status
+                        novaClassificacaoJSON.status_code = message.SUCCESS_CREATED_ITEM.status_code
+                        novaClassificacaoJSON.message = message.SUCCESS_CREATED_ITEM.message
+
+                        console.log(novaClassificacao);
+
+                        return novaClassificacaoJSON //201
+                        
+                    
+                    } else {
+                        return message.ERROR_INTERNAL_SERVER_DB //500
+                    }
+                }
+            }
+        } else {
+            return message.ERROR_CONTENT_TYPE //415
+        }
+    } catch (error) {
+        return message.ERROR_INTERNAL_SERVER //500 - Erro na controller
+    }
+}
+
+const setAtualizarClassificacao = async function (id, dadoAtualizado, contentType){
+    try {
+        let idClassificacao = id
+
+        if (String(contentType).toLowerCase() == 'application/json') {
+            let dadosID = filmesDAO.selectClassificacaoByID()
+
+            if (idClassificacao == '' || idClassificacao == undefined || idClassificacao == isNaN(idClassificacao) || idClassificacao == null) {
+
+                return message.ERROR_INVALID_ID
+
+            } else if (idClassificacao > dadosID.length) {
+
+                return message.ERROR_NOT_FOUND
+
+            } else {
+
+                let atualizarClassificacaoJSON = {}
+
+                if (dadoAtualizado.faixa_etaria == ''       || dadoAtualizado.faixa_etaria == undefined     || dadoAtualizado.faixa_etaria == null      || dadoAtualizado.faixa_etaria.length > 5       ||
+                    dadoAtualizado.classificacao == ''      || dadoAtualizado.classificacao == undefined    || dadoAtualizado.classificacao == null     || dadoAtualizado.classificacao.length > 50     ||
+                    dadoAtualizado.caracteristica == ''     || dadoAtualizado.caracteristica == undefined   || dadoAtualizado.caracteristica == null    || dadoAtualizado.caracteristica.length > 1000  ||
+                    dadoAtualizado.icone == ''              || dadoAtualizado.icone == undefined            || dadoAtualizado.icone == null             || dadoAtualizado.icone.length > 200 
+                ) { 
+                    return message.ERROR_REQUIRE_FIELDS
+                } else {
+
+                    let validateStatus = true
+
+                    if (validateStatus) {
+
+                        let dadosClassificacao = await filmesDAO.updateClassificacao(idClassificacao, dadoAtualizado)
+                        if (dadosClassificacao) {
+
+                            atualizarClassificacaoJSON.genero = dadoAtualizado
+                            atualizarClassificacaoJSON.status = message.SUCESS_UPDATE_ITEM.status//200
+                            atualizarClassificacaoJSON.status_code = message.SUCESS_UPDATE_ITEM.status_code//200
+                            atualizarClassificacaoJSON.message = message.SUCESS_UPDATE_ITEM.message//200             
+                            return atualizarClassificacaoJSON 
+
+                        } else {
+                            return message.ERROR_INTERNAL_SERVER_DB //500
+                        }
+                    } else {
+                        validateStatus = false
+                    }
+
+                }
+
+            }
+        } else {
+            return message.ERROR_CONTENT_TYPE //415
+        }
+    } catch (error) {
+        return message.ERROR_INTERNAL_SERVER //500 - erro na controller
+    }
+}
+
+
+const setExcluirClassificacao = async function (id){
+    let idClassificacao = id
+
+    if(idClassificacao == '' || idClassificacao == undefined || isNaN(idClassificacao) || idClassificacao == null){
+       return message.ERROR_INVALID_ID 
+       
+}else{
+    let dadosClassificacao = await filmesDAO.selectClassificacaoByID(idClassificacao)
+    let confirmarId = dadosClassificacao.length
+   
+
+    if (confirmarId > 0 ) {
+        dadosClassificacao = await filmesDAO.deleteClassificacao(idClassificacao)
+
+        return message.SUCCESS_DELETED_ITEM
+    } else {
+        return message.ERROR_NOT_FOUND
+    }
+}
+}
+    
 module.exports = {
     setAtualizarFilme,
     setExcluirFilme,
     setInserirNovoFilme,
     getBuscarFilme,
     getListarfilmes,
-    getNomeFilme
+    getNomeFilme,
+    setExcluirClassificacao,
+    setAtualizarClassificacao,
+    setInserirNovaClassificacao,
+    getBuscarClassificacaoID
 }

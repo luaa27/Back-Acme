@@ -124,7 +124,7 @@ app.post('/v2/FilmesACME/filme', cors(), bodyParserJSON, async function(request,
     response.json(resultDados)
 })
 
-app.delete('/v2/FilmesACME/filme/:id', cors(), async function(request, response, next){
+app.delete('/v2/FilmesACME/deletefilme/:id', cors(), async function(request, response, next){
 
     let id_filme = request.params.id
     let deleteFilme = await controllerFilmes.setExcluirFilme(id_filme)
@@ -133,7 +133,7 @@ app.delete('/v2/FilmesACME/filme/:id', cors(), async function(request, response,
     response.json(deleteFilme)
 })
 
-app.put('/v2/FilmesACME/filme/:id', cors(), bodyParserJSON, async function(request, response, next){
+app.put('/v2/FilmesACME/updatefilme/:id', cors(), bodyParserJSON, async function(request, response, next){
     let contentType = request.headers['content-type']
     let id_filme = request.params.id
 
@@ -205,7 +205,7 @@ app.put('/v2/FilmesACME/genero/:id', cors(), bodyParserJSON, async function(requ
 /************************************************ Classificação *****************************************/
 
 app.get('/v2/FilmesACME/classificacoes', cors(), async function(request,response,next){
-    let allClass = await controllerClassificacao.getListarClass()
+    let allClass = await controllerClassificacao.setListarClassificacao()
 
     response.status(allClass.status_code)
     response.json(allClass)
@@ -220,6 +220,22 @@ app.post('/v2/FilmesACME/classificacao', cors(), bodyParserJSON, async function(
 
     response.status(resultDados.status_code)
     response.json(resultDados)
+})
+
+app.get('/v2/FilmesACME/classificacao/:id', cors(), async function(request, response){
+
+    let idClassificacao = request.params.id
+
+    let dadosClassificacaoPorId = await controllerClassificacao.setListarClassificacaoById(idClassificacao)
+    
+
+    if(dadosClassificacaoPorId){
+        response.status(200)
+        response.json(dadosClassificacaoPorId)
+    } else {
+        response.status(404)
+        response.json({message: 'nenhum registro encontrado'})
+    }
 })
 
 app.delete('/v2/FilmesACME/classDelete/:id')
@@ -262,10 +278,6 @@ app.delete('/v3/acmefilmes/deleteDiretor/:id', cors (), async function (request,
 
 
 
-
-app.listen('8080', function () {
-    console.log('API FUNCIONANDO');
-});
 
 
 /*******************************************classificacao************************************************************** */
@@ -367,3 +379,7 @@ let dadosNacionalidade = await controllerNacionalidade.setListarAtorNacionalidad
 response.status(dadosNacionalidade.status_code)
 response.json(dadosNacionalidade)
 })
+
+app.listen('8085', function () {
+    console.log('API FUNCIONANDO');
+});

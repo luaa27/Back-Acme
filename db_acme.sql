@@ -150,10 +150,10 @@ email,
 data_nascimento,
 senha
 )values (
-"Ana Luiza Azevedo Morais",
-"analuiza.azevedomorais@gmail.com",
-"2006-07-22",
-"22071503"
+"Luana ",
+"Luana.Santos@gmail.com",
+"2006-06-08",
+"123"
 );
 
 create table nacionalidade(
@@ -277,7 +277,7 @@ select * from tbl_filme where id = 10;
 delete from tbl_filme where id = 10;
 
 update tbl_filme set 
-            nome =  "ana",
+            nome =  "Luana",
             sinopse = "xjasxnxjxn sjnb s",
             data_lancamento = "2022-06-24",
             data_relancamento = null,

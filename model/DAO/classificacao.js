@@ -1,95 +1,136 @@
+/****************************************************************
+ * Objetivo: Arquivo responsavel pela manipulação de dados MySQL,
+ * aqui realizamos o CRUD utilizando a linguagem sql
+ * Data: 01/02/2024
+ * Autor: Vinicius
+ * Versão: 1.0
+ ****************************************************************/
+
+// Importa de biblioteca do @prisma/client
 const { PrismaClient } = require('@prisma/client')
 
 
+// Instacia da classe PrismaClient
 const prisma = new PrismaClient()
 
-const selectAllClass = async function(){
-try {
-    let sql = 'select * from classificacao order by id_classificacao desc'
 
-    let rsClass = await prisma.$queryRawUnsafe(sql)
-    return rsClass
-} catch (error) {
-    return false
-}
-}
-
-const inserirClass = async function(classificacao){
-try {
-    
-    let sql = `insert into classificacao(
-        idade,
-        foto_classificacao,
-        descricao,
-        motivo
-    ) values(
-        '${classificacao.idade}',
-        '${classificacao.foto_classificacao}',
-        '${classificacao.descricao}',
-        '${classificacao.motivo}'
-    )`
-
-    let result = await prisma.$executeRawUnsafe(sql)
-    if (result) {
-        return true
-    } else {
-        return false
-    }
-} catch (error) {
-    return false
-}
-}
-
-const deleteClass = async function(id){
-try {
-    let sql = `delete from classificacao where id_classificacao = ${id}`
-    let rsClass = await prisma.$executeRawUnsafe(sql)
-
-    return rsClass
-} catch (error) {
-    return false
-}
-}
-
-const atualizarClass = async function(){
-
-}
-
-const returnId = async function (){
-
+const insertClassificacao = async function(dadosClassificao){
     try {
-
-        let sql = 'select CAST(last_insert_id() AS DECIMAL) as id from classificacao limit 1'
-        let rsId = await prisma.$queryRawUnsafe(sql)
+        const sql = `insert into tbl_classificacao(faixa_etaria, classificacao, caracteristica, icone)values('${dadosClassificao.faixa_etaria}',
+        '${dadosClassificao.classificacao}',
+        '${dadosClassificao.caracteristica}',
+        '${dadosClassificao.icone}')`
+        console.log(sql)
         
-        return rsId
+        let result = await prisma.$executeRawUnsafe(sql)
 
+        if(result){
+           return true
+        }else{
+           return false
+        }
     } catch (error) {
-        
         return false
     }
-  
+
 }
 
-const selectByIdClassificacao = async function (id) {
+const updateClassificacao = async function(dadosClassificacao, idClassificacao){
+    let sql
     try {
-        let sql = `select * from classificacao where id_classificacao = ${id}`
+        sql = `update tbl_classificacao set
+        faixa_etaria = '${dadosClassificacao.faixa_etaria}',
+        classificacao = '${dadosClassificacao.classificacao}',
+        caracteristica = '${dadosClassificacao.caracteristica}',
+        icone = '${dadosClassificacao.icone}'
+        where tbl_classificacao.id_classificacao = ${idClassificacao}`
+        
+        console.log(sql)
+        let result = await prisma.$executeRawUnsafe(sql)
+        if(result){
+        return true
+     }else{
+        return false
+     }
+    } catch (error) {
+        return false
+    }
+}
+
+const deleteClassificacao = async function(id){
+    try {
+        let sql = `delete from tbl_classificacao WHERE id_classificacao = ${id}`
+
+
+        
+        let rsClassificacao = await prisma.$executeRawUnsafe(sql);
+        console.log(sql);
+
+        return rsClassificacao
+    } catch (error) {
+        return false
+    }
+}
+
+const selectAllClassificacao = async function(){
+    try {
+        let sql = 'select * from classificacao'; 
+
+    let rsClassificacao = await prisma.$queryRawUnsafe(sql)
+
+    if(rsClassificacao.length > 0 )
+    return rsClassificacao
+    } catch (error) {
+        return false 
+    };    
+}
+
+const selectByIdClassificacao = async function(id){
+    try {
+        // Realiza a busca do genero pelo ID
+        let sql = `select * from tbl_classificacao where id_classificacao = ${id}`;
     
+        // Executa no banco de dados o script sql
+        let rsClassificacao = await prisma.$queryRawUnsafe(sql);
+
+            return rsClassificacao;
+    
+        } catch (error) {
+            return false;
+            
+        }
+}
+
+const IDClassificacao = async function(){
+    try {
+        let sql = `select cast(last_insert_id() as DECIMAL) as id from tbl_classificacao limit 1`
+
+        let sqlID = await prisma.$queryRawUnsafe(sql)
+
+        return sqlID
+    } catch (error) {
+        return false
+    }
+}
+const classificacaoFilmes = async function(idDoFilme){
+    try{
+        let sql = `select classificacao.* from tbl_filme join
+        classificacao on tbl_filme.classificacao_id=classificacao.id_classificacao
+            where id = ${idDoFilme};`
         let rsFilme = await prisma.$queryRawUnsafe(sql)
         return rsFilme
-    
-    } catch (error) {
+    }catch(error){
         return false
     }
-    
-       
-    }
+}
 
-module.exports={
-    selectAllClass,
-    inserirClass,
-    deleteClass,
-    atualizarClass,
-    returnId,
-    selectByIdClassificacao
+
+module.exports = {
+    insertClassificacao,
+    updateClassificacao,
+    deleteClassificacao,
+    selectAllClassificacao,
+    selectByIdClassificacao,
+    IDClassificacao,
+    classificacaoFilmes
 }
