@@ -1,10 +1,10 @@
 /****************************************************************
- * Objetivo: Arquivo responsável pela interação entre o app     *
- * e a model, que teremos todas as tratativas e regra de negócio*
- *              para o CRUD de filmes                           *
- * Data: 31/01/2024                                             *
- * Autor: Luana Santos                                           *
- * Versão: 1.0                                                  *
+ * Objetivo: Arquivo responsável pela interação entre o app     
+ * e a model, que teremos todas as tratativas e regra de negócio
+ *              para o CRUD de filmes                           
+ * Data: 31/01/2024                                             
+ * Autor: Luana Santos                                           
+ * Versão: 1.0                                                  
  ****************************************************************/
 const message = require('../modulo/config')
 
@@ -190,12 +190,15 @@ const setExcluirFilme = async function (id) {
                 return message.ERROR_NOT_FOUND //404
 
             } else{
+                let apagarFilmeGenero = await filmesDAO.deleteFilmeGenero(id)
+                console.log('abbbbbbbbbbbbbbbbbbbbaaaaaa');
                 let dadosFilme = await filmesDAO.deleteFilme(idFilme)
-                let apagarFilmeGenero = await filmesDAO.ApagarGeneroFilme(id)
-                if (dadosFilme||apagarFilmeGenero) {console.log("i0 cosa");
+                if (dadosFilme) {
+                    console.log(dadosFilme);
 
                     return message.SUCESS_DELETED_ITEM
-                } else {console.log("yhhh cosa");
+                } else {
+                    console.log(dadosFilme);
 
                     return message.ERROR_INTERNAL_SERVER_DB
                 }
@@ -205,7 +208,7 @@ const setExcluirFilme = async function (id) {
         }
 
     } catch (error) {
-console.log("alguma cosa");
+        console.log(error);
         return message.ERROR_INTERNAL_SERVER
 
     }
@@ -272,6 +275,10 @@ const getBuscarFilme = async function (id) {
         if(dadosFilme){
 
             let filmeClassificacao = await classificacaoDAO.classificacaoFilmes(id)
+            for(filme of dadosFilme){
+                let diretor = await filmesDAO.filmeDiretor(id)
+                filme.diretor = diretor
+            }
 
             if(filmeClassificacao){
 

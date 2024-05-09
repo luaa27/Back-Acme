@@ -5,7 +5,7 @@
  * Versão: 1.0
  ****************************************************************/
 
-// Import do arquivo responsavel pela interação com DB(model)
+
 const { application } = require('express')
 const classificacaoDAO = require('../model/DAO/classificacao.js')
 // Import do arquivo de configuração do projeto
